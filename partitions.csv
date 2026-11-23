@@ -1,0 +1,9 @@
+# Name,   Type, SubType, Offset,  Size, Flags
+# ESP32-S3 8MB Flash（如 S3R8N8 / N8R8）
+# App 约 1.3~1.5MB，factory 预留 2MB；默认未启用 OTA，storage 尽量做大供 MSC/Web 文件
+# 可用盘符约 5MB+（磨损均衡后略小于分区）
+nvs,      data, nvs,     0x9000,   0x6000,
+otadata,  data, ota,     0xF000,   0x2000,
+phy_init, data, phy,     0x11000,  0x1000,
+factory,  app,  factory, 0x20000,  0x200000,
+storage,  data, fat,     0x220000, 0x5E0000,
