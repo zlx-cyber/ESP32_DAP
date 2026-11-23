@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Program Device</title>
+    <style>
+        :root {
+            --bg: #eef1f4;
+            --card: #ffffff;
+            --ink: #1c2430;
+            --muted: #5c6b7a;
+            --line: #d5dde6;
+            --accent: #0d6e6e;
+            --accent-soft: #e6f3f3;
+            --warn: #8a5a00;
+            --warn-bg: #fff6e5;
+            --req: #b42318;
+            --opt: #027a48;
+            --btn: #0d6e6e;
+            --btn-alt: #2f3b4a;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body,
+        html {
+            margin: 0;
+            padding: 0;
+            min-height: 100%;
+            font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+            color: var(--ink);
+            background:
+                radial-gradient(circle at 10% 0%, #d9ebea 0%, transparent 40%),
+                radial-gradient(circle at 90% 10%, #dde5f0 0%, transparent 35%),
+                var(--bg);
+        }
+
+        .page {
+            max-width: 720px;
+            margin: 0 auto;
+            padding: 24px 16px 40px;
+        }
+
+        .page-title {
+            margin: 0 0 6px;
+            font-size: 28px;
+            letter-spacing: 0.02em;
+        }
+
+        .page-sub {
+            margin: 0 0 18px;
+            color: var(--muted);
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .tip-box {
+            background: var(--warn-bg);
+            border: 1px solid #efd9a8;
+            border-radius: 10px;
+            padding: 12px 14px;
+            margin-bottom: 18px;
+            color: var(--warn);
+            font-size: 13px;
+            line-height: 1.55;
+        }
+
+        .tip-box strong {
+            color: var(--ink);
+        }
+
+        .section {
+            background: var(--card);
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 14px;
+            box-shadow: 0 1px 0 rgba(28, 36, 48, 0.04);
+        }
+
+        .section h2 {
+            margin: 0 0 6px;
+            font-size: 17px;
+        }
+
+        .section-desc {
+            margin: 0 0 14px;
+            color: var(--muted);
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        .form-group {
+            margin-bottom: 14px;
+        }
+
+        .form-group:last-child {
+            margin-bottom: 0;
+        }
+
+        .label-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 6px;
+        }
+
+        .label-row label {
+            font-weight: 650;
+            font-size: 14px;
+        }
+
+        .tag {
+            display: inline-block;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 2px 7px;
+            border-radius: 999px;
+            line-height: 1.4;
+        }
+
+        .tag-req {
+            color: var(--req);
+            background: #fdeceb;
+        }
+
+        .tag-opt {
+            color: var(--opt);
+            background: #e8f7ef;
+        }
+
+        .hint {
+            margin: 0 0 8px;
+            color: var(--muted);
+            font-size: 12px;
+            line-height: 1.5;
+        }
+
+        input[type="text"],
+        select,
+        input[type="file"] {
+            width: 100%;
+            padding: 10px 12px;
+            font-size: 14px;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            background: #fbfcfd;
+        }
+
+        input[type="file"] {
+            padding: 8px;
+            background: #fff;
+        }
+
+        .row-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        @media (max-width: 560px) {
+            .row-2 {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .btn-row {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 10px;
+            align-items: center;
+        }
+
+        button {
+            border: none;
+            border-radius: 8px;
+            padding: 11px 16px;
+            font-size: 14px;
+            font-weight: 650;
+            cursor: pointer;
+            color: #fff;
+            background: var(--btn);
+        }
+
+        button:hover {
+            filter: brightness(1.05);
+        }
+
+        button:disabled {
+            opacity: 0.55;
+            cursor: not-allowed;
+        }
+
+        button.secondary {
+            background: var(--btn-alt);
+        }
+
+        .progress-wrap {
+            margin-top: 8px;
+        }
+
+        progress {
+            width: 100%;
+            height: 12px;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-bottom: 12px;
+            color: var(--accent);
+            text-decoration: none;
+            font-size: 13px;
+        }
+
+        .back-link:hover {
+            text-decoration: underline;
+        }
+
+        .accent-bar {
+            height: 4px;
+            width: 56px;
+            background: linear-gradient(90deg, var(--accent), #3aa6a6);
+            border-radius: 4px;
+            margin-bottom: 14px;
+        }
+    </style>
+</head>
+<script>
+    var programProgressTimer;
+
+    document.addEventListener("DOMContentLoaded", function () {
+        document.getElementById("offline-program-btn").addEventListener('click', offlineProgram);
+        document.getElementById("upload-program-btn").addEventListener('click', uploadProgram);
+        document.getElementById("upload-algorithm-btn").addEventListener('click', uploadAlgorithm);
+        document.getElementById("online-program-btn").addEventListener('click', onlineProgram);
+    });
+
+    function offlineProgram() {
+        var program = document.getElementById("offline-program").value;
+        if (!program) {
+            alert("请先选择程序（.hex/.bin）");
+            return;
+        }
+        programRequest(program, "offline", program.split('.').pop(), 0, offlineProgramResponseHandle);
+    }
+
+    function getFileById(id) {
+        let fileInput = document.getElementById(id).files;
+
+        if (fileInput.length == 0) {
+            alert("请先选择文件");
+            return;
+        }
+
+        let name = fileInput[0].name;
+        if (name.length == 0) {
+            alert("文件名无效");
+        } else if (name.indexOf(' ') >= 0) {
+            alert("文件名不能包含空格");
+        } else if (name[name.length - 1] == '/') {
+            alert("未指定文件名");
+        } else if (fileInput[0].size > 10 * 1024 * 1024) {
+            alert("文件大小必须小于 10MB");
+        } else {
+            return fileInput[0];
+        }
+
+        return;
+    }
+
+    function onlineProgram() {
+        let file = getFileById("online-program");
+        if (file != undefined) {
+            programRequest("", "online", file.name.split('.').pop(), file.size, onlineProgramResponseHandle);
+        }
+    }
+
+    function onlineProgramResponseHandle(xhr) {
+        return function () {
+            if (xhr.readyState === 4 && xhr.status === 200) {
+                updateProgressBar(0);
+                let xhttp = new XMLHttpRequest();
+                xhttp.onreadystatechange = function () {
+                    if (xhttp.readyState == 4) {
+                        if (xhttp.status == 200) {
+                            alert("程序烧录成功");
+                        } else if (xhttp.status == 0) {
+                            alert("Server closed the connection abruptly!");
+                        } else {
+                            alert(xhttp.status + " Error!\n" + xhttp.responseText);
+                        }
+                    }
+                    disable(false);
+                };
+
+                xhttp.upload.addEventListener("progress", function (e) {
+                    if (e.lengthComputable) {
+                        updateProgressBar(Math.round((e.loaded * 100) / e.total));
+                    }
+                }, false);
+
+                xhttp.open("POST", "/api/online-program", true);
+                xhttp.send(getFileById("online-program"));
+            }
+        }
+    }
+
+    function getProgramProgress() {
+        var progressXhr = new XMLHttpRequest();
+        progressXhr.onreadystatechange = function () {
+            if (progressXhr.readyState === 4 && progressXhr.status === 200) {
+                var response = JSON.parse(progressXhr.responseText);
+                updateProgressBar(response.progress);
+
+                if (response.status === "idle" && response.progress != 100) {
+                    disable(false);
+                    clearInterval(programProgressTimer);
+                    alert("程序烧录失败");
+                }
+                else if (response.progress === 100) {
+                    clearInterval(programProgressTimer);
+                    disable(false);
+                    alert("程序烧录成功");
+                }
+            }
+        };
+        progressXhr.open("GET", "/api/query?type=program-status", true);
+        progressXhr.send();
+    }
+
+    function disable(status) {
+        document.getElementById("online-program").disabled = status;
+        document.getElementById("online-program-btn").disabled = status;
+        document.getElementById("offline-program").disabled = status;
+        document.getElementById("offline-program-btn").disabled = status;
+        document.getElementById("upload-program").disabled = status;
+        document.getElementById("upload-program-btn").disabled = status;
+        document.getElementById("upload-algorithm").disabled = status;
+        document.getElementById("upload-algorithm-btn").disabled = status;
+        document.getElementById("algorithm").disabled = status;
+        document.getElementById("flash-address").disabled = status;
+        document.getElementById("ram-address").disabled = status;
+        document.getElementById("erase-mode").disabled = status;
+    }
+
+    function offlineProgramResponseHandle(xhr) {
+        return function () {
+            if (xhr.readyState === 4 && xhr.status === 200) {
+                updateProgressBar(0);
+                programProgressTimer = setInterval(getProgramProgress, 300);
+                disable(true);
+            } else if (xhr.readyState === 4) {
+                alert("启动烧录失败: " + xhr.status + "\n" + xhr.responseText);
+            }
+        }
+    }
+
+    function programRequest(program_path, program_mode, program_format, program_size, response_handle) {
+        var flash_raw = document.getElementById("flash-address").value.trim().replace(/^0x/i, "");
+        var ram_raw = document.getElementById("ram-address").value.trim().replace(/^0x/i, "");
+        var flash_addr = flash_raw ? parseInt(flash_raw, 16) : NaN;
+        var ram_addr = ram_raw ? parseInt(ram_raw, 16) : 0x20000000;
+        var algorithm = document.getElementById("algorithm").value;
+        var erase_mode = document.getElementById("erase-mode").value || "sector";
+        var xhr = new XMLHttpRequest();
+
+        if (!algorithm) {
+            alert("请选择算法(.FLM)");
+            return;
+        }
+
+        if (program_format != "bin" && program_format != "hex") {
+            alert("文件格式错误，仅支持 .hex / .bin");
+            return;
+        }
+
+        if (isNaN(flash_addr) && program_format === "bin") {
+            alert("烧录 .bin 时必须填写 Flash 地址（如 08000000）");
+            return;
+        }
+
+        if (isNaN(ram_addr)) {
+            alert("RAM 地址无效，PY32/STM32 一般填 20000000");
+            return;
+        }
+
+        disable(true);
+        xhr.open("POST", "/program", true);
+        xhr.setRequestHeader("Content-Type", "application/json");
+        xhr.onreadystatechange = response_handle(xhr);
+        xhr.send(JSON.stringify({
+            program_mode: program_mode,
+            format: program_format,
+            total_size: program_size,
+            flash_addr: isNaN(flash_addr) ? 0 : flash_addr,
+            ram_addr: ram_addr,
+            erase_mode: erase_mode,
+            algorithm: algorithm,
+            program: program_path
+        }));
+    }
+
+    function uploadProgram() {
+        let file = getFileById("upload-program");
+        if (file != undefined) {
+            let xhttp = new XMLHttpRequest();
+            disable(true);
+
+            xhttp.onreadystatechange = function () {
+                if (xhttp.readyState == 4) {
+                    if (xhttp.status == 200) {
+                        addOptionToSelect(document.getElementById("offline-program"), file.name);
+                        document.getElementById("offline-program").value = file.name;
+                        alert("程序已保存到设备盘 program/，可在上方选择后离线烧录");
+                    } else if (xhttp.status == 0) {
+                        alert("Server closed the connection abruptly!");
+                    } else {
+                        alert(xhttp.status + " Error!\n" + xhttp.responseText);
+                    }
+                }
+                disable(false);
+            };
+
+            xhttp.upload.addEventListener("progress", function (e) {
+                if (e.lengthComputable) {
+                    updateProgressBar(Math.round((e.loaded * 100) / e.total));
+                }
+            }, false);
+
+            xhttp.open("POST", "/api/upload?location=program&overwrite=true&name=" + file.name, true);
+            xhttp.send(file);
+        }
+    }
+
+    function uploadAlgorithm() {
+        let file = getFileById("upload-algorithm");
+        if (file != undefined) {
+            disable(true);
+
+            let xhttp = new XMLHttpRequest();
+            xhttp.onreadystatechange = function () {
+                if (xhttp.readyState == 4) {
+                    if (xhttp.status == 200) {
+                        alert("算法已保存到设备盘 algorithm/");
+                        addOptionToSelect(document.getElementById("algorithm"), file.name);
+                        document.getElementById("algorithm").value = file.name;
+                    } else if (xhttp.status == 0) {
+                        alert("Server closed the connection abruptly!");
+                    } else {
+                        alert(xhttp.status + " Error!\n" + xhttp.responseText);
+                    }
+                }
+                disable(false);
+            };
+
+            xhttp.upload.addEventListener("progress", function (e) {
+                if (e.lengthComputable) {
+                    updateProgressBar(Math.round((e.loaded * 100) / e.total));
+                }
+            }, false);
+
+            xhttp.open("POST", "/api/upload?location=algorithm&overwrite=true&name=" + file.name, true);
+            xhttp.send(file);
+        }
+    }
+
+    function addOptionToSelect(select, name) {
+        var option = document.createElement("option");
+        option.value = name;
+        option.text = name;
+        select.appendChild(option);
+    }
+
+    function updateProgressBar(progress) {
+        var progressBar = document.getElementById("progress");
+        progressBar.value = progress;
+    }
+</script>

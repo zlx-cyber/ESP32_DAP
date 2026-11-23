@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ESP32 DAPLink</title>
+    <style>
+        :root {
+            --bg: #eef1f4;
+            --card: #ffffff;
+            --ink: #1c2430;
+            --muted: #5c6b7a;
+            --line: #d5dde6;
+            --accent: #0d6e6e;
+            --accent2: #1a4a6e;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+            color: var(--ink);
+            background:
+                radial-gradient(circle at 12% 0%, #d9ebea 0%, transparent 42%),
+                radial-gradient(circle at 88% 8%, #dde5f0 0%, transparent 38%),
+                var(--bg);
+        }
+
+        .page {
+            max-width: 640px;
+            margin: 0 auto;
+            padding: 40px 20px 48px;
+        }
+
+        .accent-bar {
+            height: 4px;
+            width: 56px;
+            border-radius: 4px;
+            background: linear-gradient(90deg, var(--accent), #3aa6a6);
+            margin-bottom: 16px;
+        }
+
+        h1 {
+            margin: 0 0 8px;
+            font-size: 32px;
+            letter-spacing: 0.02em;
+        }
+
+        .sub {
+            margin: 0 0 28px;
+            color: var(--muted);
+            font-size: 15px;
+            line-height: 1.55;
+        }
+
+        .cards {
+            display: grid;
+            gap: 14px;
+        }
+
+        .card {
+            display: block;
+            text-decoration: none;
+            color: inherit;
+            background: var(--card);
+            border: 1px solid var(--line);
+            border-radius: 14px;
+            padding: 18px 18px 16px;
+            box-shadow: 0 1px 0 rgba(28, 36, 48, 0.04);
+            transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+            border-color: #b7c8c8;
+            box-shadow: 0 8px 24px rgba(13, 110, 110, 0.12);
+        }
+
+        .card-kicker {
+            display: inline-block;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            color: var(--accent);
+            background: #e6f3f3;
+            border-radius: 999px;
+            padding: 3px 8px;
+            margin-bottom: 10px;
+        }
+
+        .card h2 {
+            margin: 0 0 6px;
+            font-size: 20px;
+        }
+
+        .card p {
+            margin: 0;
+            color: var(--muted);
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        .card.alt .card-kicker {
+            color: var(--accent2);
+            background: #e8eef5;
+        }
+
+        .foot {
+            margin-top: 28px;
+            color: var(--muted);
+            font-size: 12px;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="page">
+        <div class="accent-bar"></div>
+        <h1>ESP32 DAPLink</h1>
+        <p class="sub">无线联网后的 Web 管理入口。烧录目标芯片，或通过浏览器访问目标板串口。</p>
+
+        <div class="cards">
+            <a class="card" href="/program">
+                <span class="card-kicker">Flash</span>
+                <h2>烧录目标芯片</h2>
+                <p>选择/上传 .FLM 算法与 .hex/.bin 固件，离线或在线 SWD 烧录。</p>
+            </a>
+            <a class="card alt" href="/webserial">
+                <span class="card-kicker">UART</span>
+                <h2>Web 串口</h2>
+                <p>浏览器经 WebSocket 收发目标 UART 日志，可设置波特率。</p>
+            </a>
+        </div>
+
+        <p class="foot">提示：本页仅在无线模式且已获取 IP 后可用。调试端口仍为 TCP 3240（elaphureLink）。</p>
+    </div>
+</body>
+
+</html>

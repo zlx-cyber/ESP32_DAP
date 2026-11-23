@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <title>WebSerial</title>
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+        :root {
+            --bg: #eef1f4;
+            --card: #ffffff;
+            --ink: #1c2430;
+            --muted: #5c6b7a;
+            --line: #d5dde6;
+            --accent: #0d6e6e;
+            --btn: #0d6e6e;
+            --btn-alt: #2f3b4a;
+            --term-bg: #152028;
+            --term-fg: #d7e2ea;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            overscroll-behavior: none;
+            font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+            color: var(--ink);
+            background:
+                radial-gradient(circle at 10% 0%, #d9ebea 0%, transparent 40%),
+                radial-gradient(circle at 90% 10%, #dde5f0 0%, transparent 35%),
+                var(--bg);
+        }
+
+        .page {
+            max-width: 920px;
+            margin: 0 auto;
+            padding: 20px 16px 32px;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-bottom: 10px;
+            color: var(--accent);
+            text-decoration: none;
+            font-size: 13px;
+        }
+
+        .back-link:hover {
+            text-decoration: underline;
+        }
+
+        .accent-bar {
+            height: 4px;
+            width: 56px;
+            border-radius: 4px;
+            background: linear-gradient(90deg, var(--accent), #3aa6a6);
+            margin-bottom: 12px;
+        }
+
+        h1 {
+            margin: 0 0 6px;
+            font-size: 26px;
+        }
+
+        .sub {
+            margin: 0 0 16px;
+            color: var(--muted);
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        .panel {
+            background: var(--card);
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            padding: 14px;
+            box-shadow: 0 1px 0 rgba(28, 36, 48, 0.04);
+        }
+
+        .toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            justify-content: flex-end;
+            margin-bottom: 10px;
+        }
+
+        .toolbar button {
+            border: none;
+            border-radius: 8px;
+            padding: 8px 10px;
+            color: #fff;
+            background: var(--btn-alt);
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+        }
+
+        .toolbar button.active {
+            background: var(--btn);
+        }
+
+        .toolbar button:hover {
+            filter: brightness(1.05);
+        }
+
+        #record {
+            width: 100%;
+            min-height: 52vh;
+            resize: vertical;
+            border: 1px solid #24333d;
+            border-radius: 10px;
+            padding: 12px;
+            background: var(--term-bg);
+            color: var(--term-fg);
+            font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+            font-size: 13px;
+            line-height: 1.45;
+        }
+
+        .row {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        @media (max-width: 560px) {
+            .row {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        #command-text,
+        #baudrate-select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            background: #fbfcfd;
+            font-size: 14px;
+        }
+
+        .action-btn {
+            border: none;
+            border-radius: 8px;
+            padding: 10px 16px;
+            min-width: 88px;
+            font-size: 14px;
+            font-weight: 650;
+            color: #fff;
+            background: var(--btn);
+            cursor: pointer;
+        }
+
+        .action-btn:disabled {
+            opacity: 0.55;
+            cursor: not-allowed;
+        }
+
+        .action-btn.secondary {
+            background: var(--btn-alt);
+        }
+
+        .hint {
+            margin: 12px 0 0;
+            color: var(--muted);
+            font-size: 12px;
+            line-height: 1.5;
+        }
+
+        .status {
+            display: inline-block;
+            margin-left: 8px;
+            font-size: 12px;
+            font-weight: 650;
+            color: var(--muted);
+        }
+
+        .status.ok {
+            color: #027a48;
+        }
+
+        .status.bad {
+            color: #b42318;
+        }
+
+        .view-opts {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 14px;
+            align-items: center;
+            margin-bottom: 10px;
+            padding: 8px 10px;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            background: #f7fafb;
+            font-size: 13px;
+        }
+
+        .view-opts label {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            user-select: none;
+            color: var(--ink);
+        }
+
+        .view-opts input {
+            width: 15px;
+            height: 15px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="page">
+        <a class="back-link" href="/">← 返回首页</a>
+        <div class="accent-bar"></div>
+        <h1>Web 串口 <span class="status" id="conn-status">连接中…</span></h1>
+        <p class="sub">浏览器 ↔ ESP32 ↔ 目标 UART（默认 GPIO18 TX / GPIO17 RX）。连接成功后可收发数据并设置波特率。</p>
+
+        <div class="panel">
+            <div class="view-opts">
+                <span style="color:var(--muted);font-weight:650;">显示：</span>
+                <label><input type="radio" name="view-mode" id="view-ascii" checked> ASCII</label>
+                <label><input type="radio" name="view-mode" id="view-hex"> 十六进制</label>
+            </div>
+            <div class="toolbar">
+                <button type="button" id="clean-button" title="清空">
+                    <svg viewBox="64 64 896 896" width="1em" height="1em" fill="currentColor" aria-hidden="true">
+                        <path
+                            d="M864 256H736v-80c0-35.3-28.7-64-64-64H352c-35.3 0-64 28.7-64 64v80H160c-17.7 0-32 14.3-32 32v32c0 4.4 3.6 8 8 8h60.4l24.7 523c1.6 34.1 29.8 61 63.9 61h454c34.2 0 62.3-26.8 63.9-61l24.7-523H888c4.4 0 8-3.6 8-8v-32c0-17.7-14.3-32-32-32zm-200 0H360v-72h304v72z">
+                        </path>
+                    </svg>
+                    清空
+                </button>
+                <button type="button" id="lock-button" title="锁定滚动">
+                    <svg viewBox="64 64 896 896" width="1em" height="1em" fill="currentColor" aria-hidden="true">
+                        <path
+                            d="M832 464h-68V240c0-70.7-57.3-128-128-128H388c-70.7 0-128 57.3-128 128v224h-68c-17.7 0-32 14.3-32 32v384c0 17.7 14.3 32 32 32h640c17.7 0 32-14.3 32-32V496c0-17.7-14.3-32-32-32zM332 240c0-30.9 25.1-56 56-56h248c30.9 0 56 25.1 56 56v224H332V240zm460 600H232V536h560v304zM484 701v53c0 4.4 3.6 8 8 8h40c4.4 0 8-3.6 8-8v-53a48.01 48.01 0 10-56 0z">
+                        </path>
+                    </svg>
+                    锁滚动
+                </button>
+                <button type="button" id="timestamp-button" title="时间戳" class="active">
+                    <svg viewBox="64 64 896 896" width="1em" height="1em" fill="currentColor" aria-hidden="true">
+                        <path
+                            d="M512 64C264.6 64 64 264.6 64 512s200.6 448 448 448 448-200.6 448-448S759.4 64 512 64zm0 820c-205.4 0-372-166.6-372-372s166.6-372 372-372 372 166.6 372 372-166.6 372-372 372z">
+                        </path>
+                        <path
+                            d="M686.7 638.6L544.1 535.5V288c0-4.4-3.6-8-8-8H488c-4.4 0-8 3.6-8 8v275.4c0 2.6 1.2 5 3.3 6.5l165.4 120.6c3.6 2.6 8.6 1.8 11.2-1.7l28.6-39c2.6-3.7 1.8-8.7-1.8-11.2z">
+                        </path>
+                    </svg>
+                    时间戳
+                </button>
+            </div>
+
+            <textarea id="record" title="串口输出" cols="40" rows="24" disabled></textarea>
+
+            <div class="row">
+                <input type="text" id="command-text" placeholder="输入要发送的内容，回车发送" />
+                <button type="button" class="action-btn" id="command-button">发送</button>
+            </div>
+
+            <div class="row">
+                <select id="baudrate-select">
+                    <option value="115200">115200</option>
+                    <option value="460800">460800</option>
+                    <option value="256000">256000</option>
+                    <option value="230400">230400</option>
+                    <option value="57600">57600</option>
+                    <option value="38400">38400</option>
+                    <option value="19200">19200</option>
+                    <option value="9600">9600</option>
+                    <option value="4800">4800</option>
+                    <option value="2400">2400</option>
+                    <option value="1200">1200</option>
+                </select>
+                <button type="button" class="action-btn secondary" id="baudrate-button">设置波特率</button>
+            </div>
+
+            <p class="hint">提示：目标板 UART 需与 ESP32 共地；若长时间无数据，请确认接线与波特率。</p>
+        </div>
+    </div>
+</body>
+<script>
+    let websocket;
+    let textArea = document.getElementById("record");
+    let enableFlowLock = false;
+    let enableTimestamp = true;
+    let viewHex = false;
+    let rxCache = "";
+    let rxTimeoutId = null;
+    let connStatus = document.getElementById("conn-status");
+
+    initWebPage();
+
+    function lockClicked() {
+        enableFlowLock = !enableFlowLock;
+        this.classList.toggle("active", enableFlowLock);
+    }
+
+    function timestampClicked() {
+        enableTimestamp = !enableTimestamp;
+        this.classList.toggle("active", enableTimestamp);
+    }
+
+    function syncViewMode() {
+        viewHex = document.getElementById("view-hex").checked;
+    }
+
+    function setConnStatus(text, ok) {
+        connStatus.textContent = text;
+        connStatus.className = "status " + (ok === true ? "ok" : (ok === false ? "bad" : ""));
+    }
+
+    function nowTimestamp() {
+        let now = new Date();
+        return "[" + now.toLocaleTimeString() + "." + now.getMilliseconds().toString().padStart(3, "0") + "] ";
+    }
+
+    function dirLabel(dir) {
+        if (dir === "tx") {
+            return "[发送] ";
+        }
+        if (dir === "rx") {
+            return "[接收] ";
+        }
+        return "[系统] ";
+    }
+
+    function bytesToHex(str) {
+        let out = "";
+        for (let i = 0; i < str.length; i++) {
+            out += str.charCodeAt(i).toString(16).padStart(2, "0").toUpperCase() + " ";
+        }
+        return out;
+    }
+
+    function formatDisplay(raw) {
+        if (viewHex) {
+            return bytesToHex(raw);
+        }
+        return raw;
+    }
+
+    function initWebPage() {
+        document.getElementById("command-button").disabled = true;
+        document.getElementById("command-text").disabled = true;
+        document.getElementById("baudrate-select").disabled = true;
+        document.getElementById("baudrate-button").disabled = true;
+        document.getElementById("lock-button").addEventListener("click", lockClicked);
+        document.getElementById("timestamp-button").addEventListener("click", timestampClicked);
+        document.getElementById("clean-button").addEventListener("click", terminalClean);
+        document.getElementById("timestamp-button").classList.add("active");
+        document.getElementById("view-ascii").addEventListener("change", syncViewMode);
+        document.getElementById("view-hex").addEventListener("change", syncViewMode);
+        syncViewMode();
+
+        terminalWriteSys("Connecting...\n");
+        initButton();
+        trapEnterKeyPress();
+        initWebSocket();
+    }
+
+    function initWebSocket() {
+        websocket = new WebSocket("ws://" + location.hostname + ":80/webserial_socket");
+        websocket.onopen = onOpen;
+        websocket.onclose = onClose;
+        websocket.onmessage = onMessage;
+    }
+
+    function initButton() {
+        document.getElementById("command-button").addEventListener("click", sendCommand);
+        document.getElementById("baudrate-button").addEventListener("click", setBaudrate);
+    }
+
+    function trapEnterKeyPress() {
+        document.getElementById("command-text").addEventListener("keypress", enterPressed);
+    }
+
+    function enterPressed(event) {
+        if (event.key === "Enter") {
+            event.preventDefault();
+            document.getElementById("command-button").click();
+        }
+    }
+
+    function onOpen() {
+        setConnStatus("已连接", true);
+        terminalWriteSys("Connected...\n");
+        document.getElementById("command-button").disabled = false;
+        document.getElementById("command-text").disabled = false;
+        document.getElementById("baudrate-select").disabled = false;
+        document.getElementById("baudrate-button").disabled = false;
+    }
+
+    function onClose() {
+        setConnStatus("已断开，重连中…", false);
+        terminalWriteSys("Disconnected, retrying...\n");
+        document.getElementById("command-button").disabled = true;
+        document.getElementById("command-text").disabled = true;
+        document.getElementById("baudrate-select").disabled = true;
+        document.getElementById("baudrate-button").disabled = true;
+        setTimeout(initWebSocket, 2000);
+    }
+
+    function onMessage(event) {
+        terminalWriteRx(event.data);
+    }
+
+    function appendText(text) {
+        if (!text) {
+            return;
+        }
+        textArea.value += text;
+        if (!enableFlowLock) {
+            textArea.scrollTop = textArea.scrollHeight;
+        }
+    }
+
+    function writeLogLine(line, dir) {
+        if (line.trim() === "" && dir !== "sys") {
+            return;
+        }
+        let prefix = "";
+        if (enableTimestamp) {
+            prefix += nowTimestamp();
+        }
+        prefix += dirLabel(dir);
+        let body = (dir === "sys") ? line : formatDisplay(line);
+        if (!body.endsWith("\n")) {
+            body += "\n";
+        }
+        appendText(prefix + body);
+    }
+
+    function terminalWriteRx(raw) {
+        rxCache += raw;
+        if (rxCache.includes("\n")) {
+            let lines = rxCache.split("\n");
+            rxCache = lines.pop();
+            lines.forEach(function (line) {
+                writeLogLine(line, "rx");
+            });
+        }
+        if (rxCache !== "") {
+            clearTimeout(rxTimeoutId);
+            rxTimeoutId = setTimeout(function () {
+                writeLogLine(rxCache, "rx");
+                rxCache = "";
+            }, 100);
+        }
+    }
+
+    function terminalWriteTx(raw) {
+        writeLogLine(raw, "tx");
+    }
+
+    function terminalWriteSys(raw) {
+        writeLogLine(raw.replace(/\n$/, ""), "sys");
+    }
+
+    function terminalClean() {
+        textArea.value = "";
+        rxCache = "";
+        clearTimeout(rxTimeoutId);
+        textArea.scrollTop = textArea.scrollHeight;
+    }
+
+    function sendCommand() {
+        if (websocket && websocket.readyState === WebSocket.OPEN) {
+            let text = document.getElementById("command-text").value;
+            websocket.send(text);
+            terminalWriteTx(text);
+        }
+    }
+
+    function setBaudrate() {
+        var selectedBaudrate = document.getElementById("baudrate-select").value;
+        var xhr = new XMLHttpRequest();
+        xhr.open("POST", "/api/set-baudrate", true);
+        xhr.setRequestHeader("Content-Type", "application/json");
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState === 4) {
+                if (xhr.status === 200) {
+                    terminalWriteSys("Baudrate set to " + selectedBaudrate + "\n");
+                } else {
+                    terminalWriteSys("Set baudrate failed: " + xhr.status + "\n");
+                }
+            }
+        };
+        xhr.send(JSON.stringify({ baudrate: selectedBaudrate }));
+    }
+</script>
+
+</html>
